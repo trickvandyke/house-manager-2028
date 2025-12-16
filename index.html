@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3b82f6">
-    <title>Tracker of Life </title>
+    <title>Tracker of Life</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -23,8 +24,13 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // Lucide icons as simple SVG components
-        const Calendar = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>;
+        // REPLACE THESE WITH YOUR SUPABASE CREDENTIALS
+        const SUPABASE_URL = 'https://prwajbdnvzoyxctwbbne.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByd2FqYmRudnpveXhjdHdiYm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NTk5MzIsImV4cCI6MjA4MTQzNTkzMn0.lswO3lX6rDtGjBodU7X0W-EAen3zeSr3nhaImHcNTeU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Icons
         const DollarSign = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
         const Dumbbell = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.4 14.4L9.6 9.6"></path><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"></path><path d="M21.5 21.5l-1.4-1.4"></path><path d="M3.9 3.9l1.4 1.4"></path><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"></path></svg>;
         const ShoppingCart = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
@@ -32,72 +38,277 @@
         const Plus = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
         const Trash2 = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>;
         const Check = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>;
+        const LogOut = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
+        const Upload = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>;
 
-        const PersonalTracker = () => {
+        const App = () => {
+          const [user, setUser] = useState(null);
+          const [loading, setLoading] = useState(true);
+
+          useEffect(() => {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              setUser(session?.user ?? null);
+              setLoading(false);
+            });
+
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+              setUser(session?.user ?? null);
+            });
+
+            return () => subscription.unsubscribe();
+          }, []);
+
+          if (loading) {
+            return (
+              <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            );
+          }
+
+          if (!user) {
+            return <AuthScreen />;
+          }
+
+          return <TrackerApp user={user} />;
+        };
+
+        const AuthScreen = () => {
+          const [isSignUp, setIsSignUp] = useState(false);
+          const [email, setEmail] = useState('');
+          const [password, setPassword] = useState('');
+          const [error, setError] = useState('');
+          const [loading, setLoading] = useState(false);
+
+          const handleAuth = async (e) => {
+            e.preventDefault();
+            setError('');
+            setLoading(true);
+
+            try {
+              if (isSignUp) {
+                const { error } = await supabase.auth.signUp({ email, password });
+                if (error) throw error;
+                alert('Check your email for the confirmation link!');
+              } else {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+              }
+            } catch (error) {
+              setError(error.message);
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+                <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+                  Tracker of Life
+                </h1>
+                
+                <form onSubmit={handleAuth} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="••••••••"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+                  </button>
+                </form>
+
+                <button
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="w-full mt-4 text-sm text-gray-600 hover:text-gray-800"
+                >
+                  {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        const TrackerApp = ({ user }) => {
           const [activeTab, setActiveTab] = useState('budget');
-          
-          const [budgetEntries, setBudgetEntries] = useState(() => {
-            const saved = localStorage.getItem('budgetEntries');
-            return saved ? JSON.parse(saved) : [];
-          });
-          
-          const [exerciseEntries, setExerciseEntries] = useState(() => {
-            const saved = localStorage.getItem('exerciseEntries');
-            return saved ? JSON.parse(saved) : [];
-          });
-          
-          const [shoppingList, setShoppingList] = useState(() => {
-            const saved = localStorage.getItem('shoppingList');
-            return saved ? JSON.parse(saved) : [];
-          });
-          
-          const [dietEntries, setDietEntries] = useState(() => {
-            const saved = localStorage.getItem('dietEntries');
-            return saved ? JSON.parse(saved) : [];
-          });
+          const [budgetEntries, setBudgetEntries] = useState([]);
+          const [exerciseEntries, setExerciseEntries] = useState([]);
+          const [shoppingList, setShoppingList] = useState([]);
+          const [dietEntries, setDietEntries] = useState([]);
+          const [showMigration, setShowMigration] = useState(false);
 
           useEffect(() => {
-            localStorage.setItem('budgetEntries', JSON.stringify(budgetEntries));
-          }, [budgetEntries]);
-          
+            const hasLocalData = 
+              localStorage.getItem('budgetEntries') ||
+              localStorage.getItem('exerciseEntries') ||
+              localStorage.getItem('shoppingList') ||
+              localStorage.getItem('dietEntries');
+            
+            if (hasLocalData) {
+              setShowMigration(true);
+            }
+          }, []);
+
+          const loadData = async () => {
+            const { data: budget } = await supabase
+              .from('budget_entries')
+              .select('*')
+              .order('date', { ascending: false });
+            setBudgetEntries(budget || []);
+
+            const { data: exercise } = await supabase
+              .from('exercise_entries')
+              .select('*')
+              .order('date', { ascending: false });
+            setExerciseEntries(exercise || []);
+
+            const { data: shopping } = await supabase
+              .from('shopping_items')
+              .select('*')
+              .order('created_at', { ascending: false });
+            setShoppingList(shopping || []);
+
+            const { data: diet } = await supabase
+              .from('diet_entries')
+              .select('*')
+              .order('date', { ascending: false });
+            setDietEntries(diet || []);
+          };
+
           useEffect(() => {
-            localStorage.setItem('exerciseEntries', JSON.stringify(exerciseEntries));
-          }, [exerciseEntries]);
-          
-          useEffect(() => {
-            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
-          }, [shoppingList]);
-          
-          useEffect(() => {
-            localStorage.setItem('dietEntries', JSON.stringify(dietEntries));
-          }, [dietEntries]);
+            loadData();
+          }, []);
+
+          const migrateLocalData = async () => {
+            try {
+              const userId = user.id;
+
+              const localBudget = JSON.parse(localStorage.getItem('budgetEntries') || '[]');
+              for (const entry of localBudget) {
+                await supabase.from('budget_entries').insert({
+                  user_id: userId,
+                  date: entry.date,
+                  amount: entry.amount,
+                  category: entry.category,
+                  description: entry.description
+                });
+              }
+
+              const localExercise = JSON.parse(localStorage.getItem('exerciseEntries') || '[]');
+              for (const entry of localExercise) {
+                await supabase.from('exercise_entries').insert({
+                  user_id: userId,
+                  date: entry.date,
+                  duration: entry.duration,
+                  type: entry.type
+                });
+              }
+
+              const localShopping = JSON.parse(localStorage.getItem('shoppingList') || '[]');
+              for (const item of localShopping) {
+                await supabase.from('shopping_items').insert({
+                  user_id: userId,
+                  name: item.name,
+                  checked: item.checked
+                });
+              }
+
+              const localDiet = JSON.parse(localStorage.getItem('dietEntries') || '[]');
+              for (const entry of localDiet) {
+                await supabase.from('diet_entries').insert({
+                  user_id: userId,
+                  date: entry.date,
+                  meal: entry.meal
+                });
+              }
+
+              localStorage.removeItem('budgetEntries');
+              localStorage.removeItem('exerciseEntries');
+              localStorage.removeItem('shoppingList');
+              localStorage.removeItem('dietEntries');
+
+              setShowMigration(false);
+              await loadData();
+              alert('Data migrated successfully!');
+            } catch (error) {
+              console.error('Migration error:', error);
+              alert('Error migrating data. Please try again.');
+            }
+          };
+
+          const handleSignOut = async () => {
+            await supabase.auth.signOut();
+          };
 
           const BudgetTab = () => {
             const [amount, setAmount] = useState('');
             const [category, setCategory] = useState('');
             const [description, setDescription] = useState('');
 
-            const addBudgetEntry = () => {
+            const addBudgetEntry = async () => {
               if (amount && category) {
-                const newEntry = {
-                  id: Date.now(),
-                  date: new Date().toISOString().split('T')[0],
-                  amount: parseFloat(amount),
-                  category,
-                  description
-                };
-                setBudgetEntries([newEntry, ...budgetEntries]);
-                setAmount('');
-                setCategory('');
-                setDescription('');
+                const { data, error } = await supabase
+                  .from('budget_entries')
+                  .insert({
+                    user_id: user.id,
+                    date: new Date().toISOString().split('T')[0],
+                    amount: parseFloat(amount),
+                    category,
+                    description
+                  })
+                  .select()
+                  .single();
+
+                if (!error) {
+                  setBudgetEntries([data, ...budgetEntries]);
+                  setAmount('');
+                  setCategory('');
+                  setDescription('');
+                }
               }
             };
 
-            const deleteEntry = (id) => {
+            const deleteEntry = async (id) => {
+              await supabase.from('budget_entries').delete().eq('id', id);
               setBudgetEntries(budgetEntries.filter(e => e.id !== id));
             };
 
-            const totalSpent = budgetEntries.reduce((sum, e) => sum + e.amount, 0);
+            const totalSpent = budgetEntries.reduce((sum, e) => sum + parseFloat(e.amount), 0);
 
             return (
               <div className="space-y-4">
@@ -141,7 +352,7 @@
                   {budgetEntries.map(entry => (
                     <div key={entry.id} className="bg-white p-3 rounded-lg shadow flex justify-between items-start">
                       <div>
-                        <p className="font-semibold">${entry.amount.toFixed(2)} - {entry.category}</p>
+                        <p className="font-semibold">${parseFloat(entry.amount).toFixed(2)} - {entry.category}</p>
                         <p className="text-sm text-gray-600">{entry.date}</p>
                         {entry.description && <p className="text-sm text-gray-500">{entry.description}</p>}
                       </div>
@@ -162,21 +373,29 @@
             const [duration, setDuration] = useState('');
             const [type, setType] = useState('');
 
-            const addExercise = () => {
+            const addExercise = async () => {
               if (duration && type) {
-                const newEntry = {
-                  id: Date.now(),
-                  date: new Date().toISOString().split('T')[0],
-                  duration,
-                  type
-                };
-                setExerciseEntries([newEntry, ...exerciseEntries]);
-                setDuration('');
-                setType('');
+                const { data, error } = await supabase
+                  .from('exercise_entries')
+                  .insert({
+                    user_id: user.id,
+                    date: new Date().toISOString().split('T')[0],
+                    duration,
+                    type
+                  })
+                  .select()
+                  .single();
+
+                if (!error) {
+                  setExerciseEntries([data, ...exerciseEntries]);
+                  setDuration('');
+                  setType('');
+                }
               }
             };
 
-            const deleteEntry = (id) => {
+            const deleteEntry = async (id) => {
+              await supabase.from('exercise_entries').delete().eq('id', id);
               setExerciseEntries(exerciseEntries.filter(e => e.id !== id));
             };
 
@@ -229,25 +448,38 @@
           const ShoppingTab = () => {
             const [item, setItem] = useState('');
 
-            const addItem = () => {
+            const addItem = async () => {
               if (item) {
-                const newItem = {
-                  id: Date.now(),
-                  name: item,
-                  checked: false
-                };
-                setShoppingList([...shoppingList, newItem]);
-                setItem('');
+                const { data, error } = await supabase
+                  .from('shopping_items')
+                  .insert({
+                    user_id: user.id,
+                    name: item,
+                    checked: false
+                  })
+                  .select()
+                  .single();
+
+                if (!error) {
+                  setShoppingList([...shoppingList, data]);
+                  setItem('');
+                }
               }
             };
 
-            const toggleItem = (id) => {
+            const toggleItem = async (id, checked) => {
+              await supabase
+                .from('shopping_items')
+                .update({ checked: !checked })
+                .eq('id', id);
+              
               setShoppingList(shoppingList.map(i => 
-                i.id === id ? { ...i, checked: !i.checked } : i
+                i.id === id ? { ...i, checked: !checked } : i
               ));
             };
 
-            const deleteItem = (id) => {
+            const deleteItem = async (id) => {
+              await supabase.from('shopping_items').delete().eq('id', id);
               setShoppingList(shoppingList.filter(i => i.id !== id));
             };
 
@@ -277,12 +509,12 @@
                   {shoppingList.map(item => (
                     <div key={item.id} className="bg-white p-3 rounded-lg shadow flex items-center gap-3">
                       <button
-                        onClick={() => toggleItem(item.id)}
+                        onClick={() => toggleItem(item.id, item.checked)}
                         className={`w-6 h-6 border-2 rounded flex items-center justify-center ${
                           item.checked ? 'bg-purple-500 border-purple-500' : 'border-gray-300'
                         }`}
                       >
-                        {item.checked && <Check size={16} />}
+                        {item.checked && <Check size={16} className="text-white" />}
                       </button>
                       <span className={`flex-1 ${item.checked ? 'line-through text-gray-400' : ''}`}>
                         {item.name}
@@ -303,19 +535,27 @@
           const DietTab = () => {
             const [meal, setMeal] = useState('');
 
-            const addMeal = () => {
+            const addMeal = async () => {
               if (meal) {
-                const newEntry = {
-                  id: Date.now(),
-                  date: new Date().toISOString().split('T')[0],
-                  meal
-                };
-                setDietEntries([newEntry, ...dietEntries]);
-                setMeal('');
+                const { data, error } = await supabase
+                  .from('diet_entries')
+                  .insert({
+                    user_id: user.id,
+                    date: new Date().toISOString().split('T')[0],
+                    meal
+                  })
+                  .select()
+                  .single();
+
+                if (!error) {
+                  setDietEntries([data, ...dietEntries]);
+                  setMeal('');
+                }
               }
             };
 
-            const deleteEntry = (id) => {
+            const deleteEntry = async (id) => {
+              await supabase.from('diet_entries').delete().eq('id', id);
               setDietEntries(dietEntries.filter(e => e.id !== id));
             };
 
@@ -366,8 +606,31 @@
 
           return (
             <div className="min-h-screen bg-gray-100">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 shadow-lg">
-                <h1 className="text-2xl font-bold text-center">Life Tracker</h1>
+              {showMigration && (
+                <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-yellow-800">Local data found!</p>
+                      <p className="text-sm text-yellow-700">Click to migrate your existing data to the database.</p>
+                    </div>
+                    <button
+                      onClick={migrateLocalData}
+                      className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 flex items-center gap-2"
+                    >
+                      <Upload size={18} /> Migrate Data
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 shadow-lg flex justify-between items-center">
+                <h1 className="text-2xl font-bold">Tracker of Life</h1>
+                <button
+                  onClick={handleSignOut}
+                  className="text-white hover:text-gray-200 flex items-center gap-2"
+                >
+                  <LogOut size={20} />
+                </button>
               </div>
 
               <div className="bg-white shadow-sm flex overflow-x-auto">
@@ -400,18 +663,12 @@
           );
         };
 
-        ReactDOM.render(<PersonalTracker />, document.getElementById('root'));
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 
     <script>
-        // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js')
                     .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker registration failed'));
-            });
-        }
-    </script>
-</body>
-</html>
+                    .catch(err => console.log('
